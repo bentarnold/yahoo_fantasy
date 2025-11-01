@@ -2,7 +2,14 @@ import os
 from pathlib import Path
 from yfpy.query import YahooFantasySportsQuery
 
-# define league object
+'''
+A class to hold league details.
+
+Args:
+    league_id (str): The ID of the league.
+    game_code (str): The game code.
+    game_id (str): The game ID.
+'''
 class League:
     def __init__(self, league_id, game_code, game_id):
         self.league_id = league_id
@@ -15,9 +22,15 @@ class League:
         print(f"Game ID: {self.game_id}")
 
 
-# Get League details from .league.env file or user input
-# --------------------------------------------------------------
-def get_league_details(league_env=None):
+'''
+Load league details from a .env file.
+
+Args:
+    league_env (str): Path to the .env file containing league details.
+Returns:
+    League: An instance of the League class with loaded details.
+'''
+def _load_league_details_from_env(league_env='env/.league.env'):
     league_id = None
     game_code = None
     game_id = None
@@ -35,30 +48,27 @@ def get_league_details(league_env=None):
     
     return League(league_id, game_code, game_id)
 
-league_details = get_league_details(league_env="env/.league.env")
-league_details.print_details()
+'''
+Authenticate and initialize Yahoo Fantasy Sports Query.
 
-# Prompt user for missing details
-if league_details.league_id is None:
-    league_details.league_id = input("Enter your Yahoo Fantasy League ID: ").strip()
-if league_details.game_code is None:
-    league_details.game_code = input("Enter the game code (e.g., 'nfl', 'mlb'): ").strip()
-if league_details.game_id is None:
-    league_details.game_id = int(input("Enter the game ID (e.g., 461 for NFL 2025): ").strip())
-
-# Populate .env file with an initial query
-# --------------------------------------------------------------
-try:
-    # Initialize the query object (handles auth automatically)
-    query = YahooFantasySportsQuery(
-        league_id=league_details.league_id,
-        game_code=league_details.game_code,
-        game_id=league_details.game_id,
-        env_var_fallback=True,
-        env_file_location=Path("./env"),
-        save_token_data_to_env_file=True,
-    )
-    # Acknowledge successful authentication
-    print("Successfully authenticated and initialized Yahoo Fantasy Sports Query.")
-except Exception as e:
-    print(f"Error: {e}")
+Args:
+    league_details (League, optional): An instance of the League class.
+        If None, details are loaded from .env file.
+'''
+def authenticate_and_initialize_yf_query(league_details=None):
+    if league_details is None:
+        league_details = _load_league_details_from_env()
+    try:
+        # Initialize the query object (handles auth automatically)
+        query = YahooFantasySportsQuery(
+            league_id=league_details.league_id,
+            game_code=league_details.game_code,
+            game_id=league_details.game_id,
+            env_var_fallback=True,
+            env_file_location=Path("./env"),
+            save_token_data_to_env_file=True,
+            )
+        # Acknowledge successful authentication
+        print("Successfully authenticated and initialized Yahoo Fantasy Sports Query.")
+    except Exception as e:
+        print(f"Error: {e}")
